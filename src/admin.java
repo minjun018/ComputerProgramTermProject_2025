@@ -22,7 +22,7 @@ public class admin extends JFrame{
         login_Window po = new login_Window();
     }
 }
-class login_Window extends JFrame{
+class login_Window extends JFrame{//로그인창 코드
     public login_Window(){
         setTitle("로그인창");
         setSize(400,400);
@@ -57,7 +57,7 @@ class login_Window extends JFrame{
         add(login_label);
         add(login_Text);
         add(But);
-        
+
         pack();
         setVisible(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);//로그인창이 꺼져도 앱이 죽지않게 처리해주는 명령어
