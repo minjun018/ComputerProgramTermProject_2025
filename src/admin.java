@@ -8,6 +8,7 @@ public class admin extends JFrame{
     final static ArrayList<String> pw = new ArrayList<>(Arrays.asList("123","456","678"));
     public admin(){
         setTitle("admin");
+        //4:3을 기준으로 size를 지정
         setSize(1600,1200);
         setLayout(new FlowLayout());
         ButtonGroup group = new ButtonGroup();
@@ -27,7 +28,7 @@ class login_Window extends JFrame{//로그인창 코드
         setTitle("로그인창");
         setSize(400,400);
         setLayout(new FlowLayout());
-
+        //프레임안에 label을 넣는 패널하나 textfield를 넣는 panel하나 그리고 로그인 버튼이 들어갈 패널하나 총 3가지 패널로 구성
         JPanel login_label = new JPanel();
         JPanel login_Text = new JPanel();
         JPanel But = new JPanel();
@@ -48,7 +49,7 @@ class login_Window extends JFrame{//로그인창 코드
         enter.addActionListener(new ActionListener(){
            @Override
             public void actionPerformed(ActionEvent e){
-               //로그인 구현
+               //로그인 구현해야함
                new admin();
                login_Window.this.dispose();//프레임이 넘어가는것처럼 보이게 하는 명령어
            }
