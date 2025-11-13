@@ -4,8 +4,6 @@ import java.awt.event.*;
 import java.util.*;
 public class admin extends JFrame{
     String[] month_Data = {"1","2","3","4","5","6","7","8","9","10","11","12"};
-    public final static ArrayList<String> Id = new ArrayList<>(Arrays.asList("a","b","c"));
-    public final static ArrayList<String> pw = new ArrayList<>(Arrays.asList("123","456","678"));
     public admin(){
         setTitle("admin");
         //4:3을 기준으로 size를 지정
