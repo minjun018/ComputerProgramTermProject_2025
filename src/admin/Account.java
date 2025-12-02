@@ -1,3 +1,7 @@
+package admin;
+
+import user.user;
+
 import java.io.*;
 import java.util.*;
 
@@ -7,7 +11,7 @@ public class Account {
     boolean manage; // 학생인지 과사무실분들인지 구분하는 인자, 관리자면 true 사용자면 false
     int uni_number;  // 단과대 구분
 
-    public Account(String id, String pw, boolean manage, int uni_number) { //Account 생성자
+    public Account(String id, String pw, boolean manage, int uni_number) { //admin.Account 생성자
         this.id = id;
         this.pw = pw;
         this.manage = manage;
@@ -22,12 +26,15 @@ class UserManage {
 
     public static void setUserList() throws IOException {
         member.clear();
+        File file = new File("src/idpw.txt");
+        if (!file.exists()) {
+            return;
+        }
         try (BufferedReader br = new BufferedReader(new FileReader("src/idpw.txt"));) {
             String s;
 
             while((s = br.readLine())!=null){
                 StringTokenizer stk = new StringTokenizer(s);
-
                 String a = stk.nextToken();
                 String b = stk.nextToken();
                 Boolean c = Boolean.valueOf(stk.nextToken());
@@ -66,7 +73,12 @@ class UserManage {
             if (mem.get(id).pw.equals(pw)) {
                 System.out.println("login");
                 lw.dispose();
-                new Admin(mem.get(id));
+                if(mem.get(id).manage) {
+                    new Admin(mem.get(id));
+                }
+                else if(!mem.get(id).manage){
+                    new user();
+                }
             } else throw new Exception();
 
         } catch (Exception e) {

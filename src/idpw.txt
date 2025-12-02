@@ -1,0 +1,2 @@
+aa	aa	true	0
+a	a	false	0
