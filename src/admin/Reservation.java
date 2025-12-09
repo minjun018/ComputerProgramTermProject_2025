@@ -8,16 +8,13 @@ import java.util.Calendar;
 import java.util.StringTokenizer;
 
 class Reserve {
-    int year;
-    int month;
-    int date;
-    int startt;
-    int endt;
+    int year, month, date;
+    int startt, endt;
     int people;
-    int rnum;
-    String s;
+    int rnum; // roomList의 인덱스
+    String reason;
 
-    Reserve(int year, int month, int date, int startt, int endt, int people, int rnum, String s) {
+    Reserve(int year, int month, int date, int startt, int endt, int people, int rnum, String reason) {
         this.year = year;
         this.month = month;
         this.date = date;
@@ -25,8 +22,11 @@ class Reserve {
         this.endt = endt;
         this.people = people;
         this.rnum = rnum;
-        this.s = s;
-
+        this.reason = reason;
+    }
+    public String toFileString() {
+        String ymd = String.format("%04d%02d%02d", year, month, date);
+        return String.format("%s %d %d %d %d %s", ymd, startt, endt, people, rnum, reason);
     }
 }
 
@@ -40,112 +40,148 @@ class Reservation extends JPanel {
             "공5401", "공5402", "공5403", "공5404", "공5405", "공5406", "공5407", "공5408", "공5409", "공5410", "공5411", "공5413", "공5414", "공5415", "공5416" };
 
     JLabel rs = new JLabel(" 조정 사유");
-    JButton block = new JButton("예약 제한");
-    JButton cancel = new JButton("예약 취소");
+    JButton block = new JButton("차단 실행");
     JTextArea reason = new JTextArea(2, 22);
-    JPanel pn1 = new JPanel();
-    JPanel pn2 = new JPanel();
-    JPanel rv1 = new JPanel();
-    JPanel rv2 = new JPanel();
-    JPanel rv3 = new JPanel();
-
-
-    JComboBox<String> room = new JComboBox<>(roomList); // 강의실 선택 콤보박스
+    JComboBox<String> roomCmb = new JComboBox<>(roomList);
     JComboBox<String> startTime = new JComboBox<>(time);
     JComboBox<String> endTime = new JComboBox<>(time);
-    JOptionPane alert = new JOptionPane();
+
+    JPanel rv1 = new JPanel();
+    JPanel rv2 = new JPanel();
 
     static ArrayList<Reserve> rsv = new ArrayList<>();
-    static ArrayList<Reserve> rsvAct = new ArrayList<>();
 
-    public static void setRvList() throws IOException{
+    private final String FILE_PATH = "src/admin/rs.txt";
+
+    public void loadReservations() {
         rsv.clear();
-        String s, a;
-        int year = 0; int month = 0; int date = 0; int start = 0;
-        int end = 0; int totalpp = 0; int roomnum = 0;
-        String st = null;
+        File file = new File(FILE_PATH);
+        if(!file.exists()) return;
 
-        try ( BufferedReader br = new BufferedReader(new FileReader("src/rs.txt")); ) {
-            while((s = br.readLine())!=null) {
-                StringTokenizer stk = new StringTokenizer(s);
-                a = stk.nextToken();
-                year = Integer.parseInt(a.substring(0, 4));
-                month = Integer.parseInt(a.substring(4, 6));
-                date = Integer.parseInt(a.substring(6, 8));
-                start = Integer.parseInt(stk.nextToken());
-                end = Integer.parseInt(stk.nextToken());
-                totalpp = Integer.parseInt(stk.nextToken());
-                roomnum = Integer.parseInt(stk.nextToken());
-                st = stk.nextToken();
-                while (true) {
-                    st += " "+stk.nextToken(); }
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if(line.trim().isEmpty()) continue;
+
+                StringTokenizer stk = new StringTokenizer(line);
+                if(stk.countTokens() < 6) continue;
+
+                String ymd = stk.nextToken(); // 20251207
+                int year = Integer.parseInt(ymd.substring(0, 4));
+                int month = Integer.parseInt(ymd.substring(4, 6));
+                int date = Integer.parseInt(ymd.substring(6, 8));
+
+                int start = Integer.parseInt(stk.nextToken());
+                int end = Integer.parseInt(stk.nextToken());
+                int pp = Integer.parseInt(stk.nextToken());
+                int rIdx = Integer.parseInt(stk.nextToken());
+
+                StringBuilder sb = new StringBuilder();
+                while(stk.hasMoreTokens()) {
+                    sb.append(stk.nextToken()).append(" ");
+                }
+                String reasonStr = sb.toString().trim();
+
+                rsv.add(new Reserve(year, month, date, start, end, pp, rIdx, reasonStr));
             }
-        } catch (Exception e) { rsv.add(new Reserve(year, month, date, start, end, totalpp, roomnum, st)); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    JPanel reservationNow(int room, int start, int end, int people, String s) throws IOException {
-        JPanel jp1 = new JPanel();
-        setRvList();
-
-        if (!s.equals("예약됨")) {
-
-            jp1.setLayout(new GridLayout(0,5, 200, 0));
-            jp1.add(new JLabel(roomList[room]+""));
-            jp1.add(new JLabel(time[start]+" ~ "+time[end]));
-            jp1.add(new JLabel(people+"명"));
-            jp1.add(new JLabel("취소 사유 : "+s));
-            return jp1;
-        } else {
-            jp1.setLayout(new GridLayout(0,5, 200, 0));
-            jp1.add(new JLabel(roomList[room]+""));
-            jp1.add(new JLabel(time[start]+" ~ "+time[end]));
-            jp1.add(new JLabel(people+"명"));
-            JButton cc = new JButton("예약됨");    cc.setEnabled(false);
-            jp1.add(cc);
-            return jp1;
+    public void saveReservation(Reserve newRv) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
+            if (new File(FILE_PATH).length() > 0) bw.newLine();
+            bw.write(newRv.toFileString());
+            rsv.add(newRv);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "파일 저장 중 오류 발생");
         }
+    }
+
+    public boolean isConflict(int rIdx, int y, int m, int d, int sTime, int eTime) {
+        for (Reserve r : rsv) {
+            if (r.year == y && r.month == m && r.date == d && r.rnum == rIdx) {
+                if (r.startt < eTime && r.endt > sTime) {
+                    return true; // 겹침!
+                }
+            }
+        }
+        return false; // 안 겹침
     }
 
     Reservation(int year, int month, int date) {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(0,0,100,0));
+
+        loadReservations();
+
         rv1.setLayout(new BorderLayout());
-        rv1.setBorder(BorderFactory.createTitledBorder(year+"년 "+month+"월 "+date+"일 예약 조정"));
-        pn1.add(room);
-        pn1.add(startTime);
-        pn1.add(endTime);
-        rv1.add(pn1, "West");
+        rv1.setBorder(BorderFactory.createTitledBorder(year+"년 "+month+"월 "+date+"일 예약 관리"));
 
-        pn2.setLayout(new BorderLayout());
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(roomCmb);
+        inputPanel.add(new JLabel("시작:"));
+        inputPanel.add(startTime);
+        inputPanel.add(new JLabel("종료:"));
+        inputPanel.add(endTime);
+        rv1.add(inputPanel, "West");
+
+        JPanel reasonPanel = new JPanel(new BorderLayout());
         reason.setLineWrap(true);
-        pn2.add(rs, BorderLayout.NORTH);    pn2.add(reason, BorderLayout.SOUTH);
-        pn2.setBorder(BorderFactory.createEmptyBorder(0,200,10,400));
-        rv1.add(pn2);
+        reasonPanel.add(new JLabel("사유:"), BorderLayout.NORTH);
+        reasonPanel.add(new JScrollPane(reason), BorderLayout.CENTER);
+        rv1.add(reasonPanel, "Center");
         rv1.add(block, "East");
+
         add(rv1, "North");
+        rv2.setLayout(new GridLayout(0, 1)); // 세로로 쭉 나열
+        JScrollPane scrollPane = new JScrollPane(rv2);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("현재 예약 현황"));
+        add(scrollPane, "Center");
+        updateReservationListPanel(year, month, date);
+        block.addActionListener(e -> {
+            int sIdx = startTime.getSelectedIndex();
+            int eIdx = endTime.getSelectedIndex();
+            int rIdx = roomCmb.getSelectedIndex();
+            String reasonText = reason.getText();
 
-        block.addActionListener(e-> {
+            if (sIdx >= eIdx) {
+                JOptionPane.showMessageDialog(this, "종료 시간이 시작 시간보다 빨라야 합니다.");
+                return;
+            }
+            if (reasonText.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "사유를 입력해주세요.");
+                return;
+            }
 
-            if (startTime.getSelectedIndex()>=endTime.getSelectedIndex()) System.out.println("시간 설정이 잘못되었습니다.");
-            else {
-                Calendar now = Calendar.getInstance();
-                int y = now.get(Calendar.YEAR); int m = now.get(Calendar.MONTH)+1; int d = now.get(Calendar.DATE);
-                int h = now.get(Calendar.HOUR_OF_DAY); int min = now.get(Calendar.MINUTE);
-                Boolean checkhour = year == y && month == m && date == d && h > startTime.getSelectedIndex()/2+9;
-                Boolean checkminute = year == y && month == m && date == d && h == startTime.getSelectedIndex()/2+9 && min > startTime.getSelectedIndex()%2*30;
+            if (isConflict(rIdx, year, month, date, sIdx, eIdx)) {
+                JOptionPane.showMessageDialog(this, "이미 차단된 시간대입니다.");
+                return;
+            }
 
-                if (year < y || (year == y && month < m) || (year == y && month == m && date < d) || checkhour || checkminute) {
-                    System.out.println("조정 불가 시간대입니다.");
-                } else {}
-            } // 미완
+            Reserve newRv = new Reserve(year, month, date, sIdx, eIdx, 0, rIdx, reasonText); // 인원수는 0으로 임시 처리
+            saveReservation(newRv);
+
+            JOptionPane.showMessageDialog(this, "차단되었습니다.");
+            System.out.println("차단되었습니다");
+            updateReservationListPanel(year, month, date); // 화면 갱신
+            reason.setText(""); // 입력창 비우기
         });
+    }
 
-        try {
-            rv2.setLayout(new GridLayout(0,1));
-            rv2.add(reservationNow(3, 3,2,4,"예약됨")); // TODO : 해당 년, 월 조건 작성 필요
-            rv2.add(reservationNow(3, 3,5,4,"학과 행사"));
-            rv2.setBorder(BorderFactory.createTitledBorder(year+"년 "+month+"월 "+date+"일 예약 현황"));
-            add(rv2, "South");
-        } catch(IOException e) { System.out.println("오류발생"); }
+    void updateReservationListPanel(int y, int m, int d) {
+        rv2.removeAll(); // 기존 목록 싹 지우기
+
+        for (Reserve r : rsv) {
+            if (r.year == y && r.month == m && r.date == d) {
+                JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                row.add(new JLabel("[" + roomList[r.rnum] + "]"));
+                row.add(new JLabel(time[r.startt] + " ~ " + time[r.endt]));
+                row.add(new JLabel("- " + r.reason));
+                rv2.add(row);
+            }
+        }
+        rv2.revalidate();
+        rv2.repaint();
     }
 }
