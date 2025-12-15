@@ -24,7 +24,7 @@ public class UserManage {
                 StringTokenizer stk = new StringTokenizer(s);
                 String a = stk.nextToken();
                 String b = stk.nextToken();
-                Boolean c = Boolean.valueOf(stk.nextToken());
+                boolean c = Boolean.parseBoolean(stk.nextToken());
                 int d = Integer.parseInt(stk.nextToken());
                 member.add(new Account(a, b, c, d));
             }

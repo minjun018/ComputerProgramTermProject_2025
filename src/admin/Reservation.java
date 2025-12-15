@@ -4,14 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.StringTokenizer;
 
 class Reserve {
     int year, month, date;
     int startt, endt;
     int people;
-    int rnum; // roomList의 인덱스
+    int rnum;
     String reason;
 
     Reserve(int year, int month, int date, int startt, int endt, int people, int rnum, String reason) {
@@ -66,7 +65,7 @@ class Reservation extends JPanel {
                 StringTokenizer stk = new StringTokenizer(line);
                 if(stk.countTokens() < 6) continue;
 
-                String ymd = stk.nextToken(); // 20251207
+                String ymd = stk.nextToken();
                 int year = Integer.parseInt(ymd.substring(0, 4));
                 int month = Integer.parseInt(ymd.substring(4, 6));
                 int date = Integer.parseInt(ymd.substring(6, 8));
@@ -99,15 +98,29 @@ class Reservation extends JPanel {
         }
     }
 
+    public void rewriteAllReservations() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            for (int i = 0; i < rsv.size(); i++) {
+                bw.write(rsv.get(i).toFileString());
+                if (i < rsv.size() - 1) {
+                    bw.newLine();
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "파일 삭제/저장 중 오류 발생");
+            e.printStackTrace();
+        }
+    }
+
     public boolean isConflict(int rIdx, int y, int m, int d, int sTime, int eTime) {
         for (Reserve r : rsv) {
             if (r.year == y && r.month == m && r.date == d && r.rnum == rIdx) {
                 if (r.startt < eTime && r.endt > sTime) {
-                    return true; // 겹침!
+                    return true;
                 }
             }
         }
-        return false; // 안 겹침
+        return false;
     }
 
     Reservation(int year, int month, int date) {
@@ -134,11 +147,12 @@ class Reservation extends JPanel {
         rv1.add(block, "East");
 
         add(rv1, "North");
-        rv2.setLayout(new GridLayout(0, 1)); // 세로로 쭉 나열
+        rv2.setLayout(new GridLayout(0, 1));
         JScrollPane scrollPane = new JScrollPane(rv2);
         scrollPane.setBorder(BorderFactory.createTitledBorder("현재 예약 현황"));
         add(scrollPane, "Center");
         updateReservationListPanel(year, month, date);
+
         block.addActionListener(e -> {
             int sIdx = startTime.getSelectedIndex();
             int eIdx = endTime.getSelectedIndex();
@@ -155,29 +169,40 @@ class Reservation extends JPanel {
             }
 
             if (isConflict(rIdx, year, month, date, sIdx, eIdx)) {
-                JOptionPane.showMessageDialog(this, "이미 차단된 시간대입니다.");
+                JOptionPane.showMessageDialog(this, "이미 예약/차단된 시간대입니다.");
                 return;
             }
 
-            Reserve newRv = new Reserve(year, month, date, sIdx, eIdx, 0, rIdx, reasonText); // 인원수는 0으로 임시 처리
+            Reserve newRv = new Reserve(year, month, date, sIdx, eIdx, 0, rIdx, reasonText);
             saveReservation(newRv);
 
             JOptionPane.showMessageDialog(this, "차단되었습니다.");
-            System.out.println("차단되었습니다");
-            updateReservationListPanel(year, month, date); // 화면 갱신
-            reason.setText(""); // 입력창 비우기
+            updateReservationListPanel(year, month, date);
+            reason.setText("");
         });
     }
 
     void updateReservationListPanel(int y, int m, int d) {
-        rv2.removeAll(); // 기존 목록 싹 지우기
+        rv2.removeAll();
 
         for (Reserve r : rsv) {
             if (r.year == y && r.month == m && r.date == d) {
                 JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
                 row.add(new JLabel("[" + roomList[r.rnum] + "]"));
                 row.add(new JLabel(time[r.startt] + " ~ " + time[r.endt]));
-                row.add(new JLabel("- " + r.reason));
+                row.add(new JLabel("- " + r.reason + "  "));
+
+                JButton deleteBtn = new JButton("삭제");
+                deleteBtn.setPreferredSize(new Dimension(60, 20));
+                deleteBtn.addActionListener(e -> {
+                    int confirm = JOptionPane.showConfirmDialog(this, "이 예약을 삭제하시겠습니까?", "삭제 확인", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        rsv.remove(r);
+                        rewriteAllReservations();
+                        updateReservationListPanel(y, m, d);
+                    }
+                });
+                row.add(deleteBtn);
                 rv2.add(row);
             }
         }

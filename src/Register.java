@@ -1,8 +1,9 @@
-import admin.UserManage;
-
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 class Register extends JFrame {
     Register() {
@@ -15,7 +16,7 @@ class Register extends JFrame {
         JButton rg = new JButton("회원가입");
         JTextField id_text = new JTextField(18);
         JTextField pw_text = new JTextField(18);
-        JComboBox<String> mjr = new JComboBox<>(major); // 전공에 따른 강의실 선택
+        JComboBox<String> mjr = new JComboBox<>(major);
 
 
         JPanel p1 = new JPanel();
@@ -32,13 +33,28 @@ class Register extends JFrame {
         rg.addActionListener(e -> {
             String a = id_text.getText();
             String b = pw_text.getText();
-            Boolean c = isad.isSelected() ? true : false;
+            boolean c = isad.isSelected();
             int d = mjr.getSelectedIndex();
 
             try {
-                UserManage.register(a, b, c, d);
-            } catch (IOException x) {
-                System.out.println("오류 발생");
+                Socket socket = new Socket("127.0.0.1", 9999);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                out.println("REGISTER|" + a + "|" + b + "|" + c + "|" + d);
+
+                String response = in.readLine();
+                if(response != null && response.equals("SUCCESS")){
+                    JOptionPane.showMessageDialog(this, "회원가입 성공");
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "회원가입 실패");
+                }
+                socket.close();
+
+            } catch (Exception x) {
+                x.printStackTrace();
+                JOptionPane.showMessageDialog(this, "서버 연결 오류");
             }
         });
 

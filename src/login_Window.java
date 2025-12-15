@@ -1,15 +1,16 @@
 import admin.Account;
-import admin.UserManage;
 import admin.admin;
 import user.user;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
-
-public class login_Window extends JFrame {//로그인창 코드
+public class login_Window extends JFrame {
     public login_Window(){
         setTitle("로그인창");
         setSize(290,180);
@@ -40,26 +41,43 @@ public class login_Window extends JFrame {//로그인창 코드
         pn1.add(login, BorderLayout.WEST); pn1.add(login_text, BorderLayout.EAST);
 
         ActionListener le = e->{
-            String a = id_Text.getText();
-            String b = pw_Text.getText();
-            try {
-                Account account = UserManage.Login(a, b);
-                if (account != null) {
-                    // 로그인 성공! 이제 여기서 창을 끈다.
-                    this.dispose();
+            String id = id_Text.getText();
+            String pw = pw_Text.getText();
 
-                    // 관리자 여부에 따라 화면 이동도 여기서 결정!
-                    if (account.manage) {
+            try {
+                // 포트 9999로 변경
+                Socket socket = new Socket("localhost", 9999);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                out.println("LOGIN|" + id + "|" + pw);
+
+                String response = in.readLine();
+
+                if (response != null && response.startsWith("SUCCESS")) {
+                    String[] tokens = response.split("\\|");
+
+                    String rId = tokens[1];
+                    String rPw = tokens[2];
+                    boolean rManage = Boolean.parseBoolean(tokens[3]);
+                    int rUni = Integer.parseInt(tokens[4]);
+
+                    Account account = new Account(rId, rPw, rManage, rUni);
+
+                    dispose();
+
+                    if (rManage) {
                         new admin(account);
                     } else {
-                        new user(); // user 생성자에 account 넘겨줘야 할 수도 있음
+                        new user();
                     }
                 } else {
-                    // 로그인 실패 (null)
                     JOptionPane.showMessageDialog(this, "아이디 또는 비밀번호가 틀렸습니다.");
+                    socket.close();
                 }
-            } catch (IOException x) {
-                return;
+            } catch (Exception x) {
+                x.printStackTrace();
+                JOptionPane.showMessageDialog(this, "서버 연결 실패: " + x.getMessage());
             }
         };
         pw_Text.addActionListener(le);
@@ -73,10 +91,9 @@ public class login_Window extends JFrame {//로그인창 코드
         add(pn2);
 
         setVisible(true);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);//로그인창이 꺼져도 앱이 죽지않게 처리해주는 명령어
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
     public static void main(String[] args){
         new login_Window();
     }
 }
-
