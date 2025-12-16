@@ -1,4 +1,4 @@
-import admin.Account;
+import admin.AccountDTO;
 import admin.UserManage;
 
 import java.io.*;
@@ -118,10 +118,10 @@ public class Server {
                         String id = parts[1];
                         String pw = parts[2];
 
-                        Account account = UserManage.Login(id, pw);
+                        AccountDTO accountDTO = UserManage.Login(id, pw);
 
-                        if (account != null) {
-                            out.println("SUCCESS|" + account.id + "|" + account.pw + "|" + account.manage + "|" + account.uni_number);
+                        if (accountDTO != null) {
+                            out.println("SUCCESS|" + accountDTO.id + "|" + accountDTO.pw + "|" + accountDTO.manage + "|" + accountDTO.uni_number);
                             System.out.println(">>> 로그인 성공 응답 보냄");
                         } else {
                             out.println("FAIL");

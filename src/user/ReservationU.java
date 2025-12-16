@@ -179,20 +179,6 @@ class Reserve1 {
                     row.add(new JLabel(time[r.startt] + "~" + time[r.endt] + " "));
                     row.add(new JLabel("(" + r.people + "명): " + r.s));
 
-                    JButton delBtn = new JButton("삭제");
-                    delBtn.setPreferredSize(new Dimension(60, 20));
-                    delBtn.addActionListener(e -> {
-                        String ymd = String.format("2025%02d%02d", month, date);
-                        try (Socket socket = new Socket("localhost", 1224);
-                             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-                            String delMsg = String.format("%s %d %d %d %d", ymd, r.startt, r.endt, r.people, r.roomIdx);
-                            out.println("DELETE " + delMsg);
-                            setRvList();
-                            refreshListPanel(month, date);
-                        } catch(Exception ex) { ex.printStackTrace(); }
-                    });
-                    row.add(delBtn);
-
                     rv2.add(row);
                     hasData = true;
                 }

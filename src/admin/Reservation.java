@@ -92,7 +92,7 @@ class Reservation extends JPanel {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
             if (new File(FILE_PATH).length() > 0) bw.newLine();
             bw.write(newRv.toFileString());
-            rsv.add(newRv);
+            rsvgit.add(newRv);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "파일 저장 중 오류 발생");
         }

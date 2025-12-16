@@ -1,14 +1,10 @@
 package admin;
 
-import admin.Account;
-import admin.admin;
-import user.user;
-
 import java.io.*;
 import java.util.*;
 
 public class UserManage {
-    static ArrayList<Account> member = new ArrayList<>();
+    static ArrayList<AccountDTO> member = new ArrayList<>();
 
 
     public static void setUserList() throws IOException {
@@ -26,7 +22,7 @@ public class UserManage {
                 String b = stk.nextToken();
                 boolean c = Boolean.parseBoolean(stk.nextToken());
                 int d = Integer.parseInt(stk.nextToken());
-                member.add(new Account(a, b, c, d));
+                member.add(new AccountDTO(a, b, c, d));
             }
         }
     }
@@ -57,9 +53,9 @@ public class UserManage {
     }
 
 
-    public static Account Login(String id, String pw) throws IOException {
+    public static AccountDTO Login(String id, String pw) throws IOException {
         setUserList();
-        HashMap<String, Account> mem = new HashMap<>();
+        HashMap<String, AccountDTO> mem = new HashMap<>();
         member.forEach(m -> {
             mem.put(m.id, m);
         });

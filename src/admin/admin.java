@@ -1,14 +1,12 @@
 package admin;
 import com.toedter.calendar.JCalendar;
-import java.awt.*;
+
 import javax.swing.*;
-import java.awt.event.*;
-import java.io.IOException;
 import java.util.*;
 public class admin extends JFrame{
 
 
-    public admin(Account account){
+    public admin(AccountDTO accountDTO){
         setTitle("admin");
         setSize(1600,1000);
 

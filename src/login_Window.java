@@ -1,4 +1,4 @@
-import admin.Account;
+import admin.AccountDTO;
 import admin.admin;
 import user.user;
 
@@ -62,12 +62,12 @@ public class login_Window extends JFrame {
                     boolean rManage = Boolean.parseBoolean(tokens[3]);
                     int rUni = Integer.parseInt(tokens[4]);
 
-                    Account account = new Account(rId, rPw, rManage, rUni);
+                    AccountDTO accountDTO = new AccountDTO(rId, rPw, rManage, rUni);
 
                     dispose();
 
                     if (rManage) {
-                        new admin(account);
+                        new admin(accountDTO);
                     } else {
                         new user();
                     }
